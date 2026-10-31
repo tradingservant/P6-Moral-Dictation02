@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Moral Dictation">
+  <rect width="64" height="64" rx="14" fill="#0b5cab"/>
+  <rect x="14" y="12" width="28" height="40" rx="4" fill="#fff"/>
+  <path d="M20 24h16M20 32h16M20 40h10" stroke="#0b5cab" stroke-width="3" stroke-linecap="round"/>
+  <path d="M36 40l12-16 6 4-12 16z" fill="#ffd15c"/>
+  <path d="M48 24l6 4-3 2-6-4z" fill="#e07a2f"/>
+</svg>
