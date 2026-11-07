@@ -290,6 +290,11 @@ h2.step-title {
 }
 
 .word-card strong, .icon-pick strong { font-size: 0.95rem; line-height: 1.25; }
+.icon-pick.is-text {
+  min-height: var(--tap);
+  padding: 14px 12px;
+}
+.icon-pick.is-text strong { font-size: 1.05rem; }
 .gloss { color: var(--muted); font-size: 0.85rem; }
 
 .letter {

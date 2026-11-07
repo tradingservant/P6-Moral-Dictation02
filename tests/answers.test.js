@@ -18,7 +18,7 @@ function assert(cond, message) {
 assert(content.title === "Moral · Dictation (2) · Module 2 U3&4", "title");
 assert(content.subtitle === "Vocabulary · Recitation · Passage · Grammar · Dictation", "subtitle");
 assert(content.motto === "Spell carefully. Listen carefully. Write carefully!", "motto");
-assert(content.hub === "五關：14 個詞彙、兩句背誦、Amy／Peter 短文、too／very few／although／because、聽寫模擬", "hub");
+assert(content.hub === "五關：14 個詞彙、兩句背誦、Amy／Peter 短文、文法 30 題（too／very few／although／because）、聽寫模擬", "hub");
 assert(content.footer === "Moral · Dictation (2) · v1.0", "footer");
 assert(content.version === "v1.0", "version");
 assert(content.storageKey === "p6-moral-dictation02-v1.0", "storage");
@@ -69,14 +69,14 @@ assert(content.pictures[0].word === "earthquake" && content.pictures[13].word ==
 const emojiSet = new Set(content.pictures.map((pic) => pic.emoji));
 assert(emojiSet.size === 14, "distinct emoji");
 
-const expectedCounts = { vocab: 43, recite: 11, passage: 21, grammar: 15, dictation: 18 };
+const expectedCounts = { vocab: 43, recite: 11, passage: 21, grammar: 30, dictation: 18 };
 let total = 0;
 content.modules.forEach((mod) => {
   const n = mod.steps.reduce((sum, step) => sum + checks.countItems(step), 0);
   total += n;
   assert(n === expectedCounts[mod.id], `${mod.id} graded ${n} !== ${expectedCounts[mod.id]}`);
 });
-assert(total === 108, `total graded ${total}`);
+assert(total === 123, `total graded ${total}`);
 
 function findStep(modId, kind, title) {
   const mod = content.modules.find((item) => item.id === modId);
@@ -118,6 +118,13 @@ assert(findStep("vocab", "mcq").items[0].options.join("|") === "drought|drout|dr
 
 const hunt = findStep("vocab", "iconHunt");
 assert(hunt.items.length === 14, "icon hunt 14");
+assert(hunt.hideIcons === true, "icon hunt answer cards hide icons");
+assert(Object.keys(content.icons).length === 14, "emoji bank stays for teach and dictation");
+findStep("vocab", "mcq").items.forEach((item) => {
+  item.options.forEach((option) => {
+    assert(!/\p{Extended_Pictographic}/u.test(option), `spelling option text only: ${option}`);
+  });
+});
 const huntPairs = [
   ["地震", "earthquake"],
   ["昂貴的", "expensive"],
@@ -237,15 +244,53 @@ const passageFix = findStep("passage", "fix");
 assert(passageFix.items.map((item) => item.answer).join("|") === "meaningful activities|very few doctors|to search for beetles", "passage fixes");
 assert(passageFix.items[0].prompt.includes("meaningful events"), "events prompt");
 
-const grammarMcq = findStep("grammar", "mcq").items.map((item) => item.answer);
-assert(grammarMcq.join("|") === "too|very few|Although|because|too dirty|very few", "grammar mcq");
+const grammarMod = content.modules.find((mod) => mod.id === "grammar");
+assert(grammarMod.blurb.includes("30"), "grammar blurb says 30");
+const grammarMcqItems = findStep("grammar", "mcq").items;
+const grammarMcq = grammarMcqItems.map((item) => item.answer);
+assert(grammarMcq.join("|") === [
+  "too", "very few", "Although", "because", "too dirty", "very few",
+  "too expensive", "very few", "Although", "because", "too dangerous", "very few",
+].join("|"), "grammar mcq");
+assert(grammarMcqItems[6].q === "選正確：The shoes are ______ for him.", "g7 stem");
+assert(grammarMcqItems[6].options.join("|") === "too expensive|very few expensive|although expensive|too expensives", "g7 options");
+assert(grammarMcqItems[6].why === "too + 形容詞。", "g7 why");
+assert(grammarMcqItems[7].options.join("|") === "very few|too|Although|sincerely", "g8 options");
+assert(grammarMcqItems[8].q.includes("Annie's family still lives there."), "g9 stem");
+assert(grammarMcqItems[8].why === "Although 表「雖然」。", "g9 why");
+assert(grammarMcqItems[9].q.includes("They search for beetles ______ they need food."), "g10 stem");
+assert(grammarMcqItems[9].why === "because 表原因。", "g10 why");
+assert(grammarMcqItems[10].options.join("|") === "too dangerous|very few dangerous|although dangerous|too danger", "g11 options");
+assert(grammarMcqItems[10].why === "too + 形容詞 dangerous。", "g11 why");
+assert(grammarMcqItems[11].q.includes("bright shops open."), "g12 stem");
+assert(grammarMcqItems[11].options.join("|") === "very few|too|although|sponsor", "g12 options");
+assert(grammarMcqItems[11].why === "very few + 複數名詞 shops。", "g12 why");
 const grammarBank = findStep("grammar", "bank");
-assert(grammarBank.bank.filter((word) => word === "too").length === 2, "two too chips");
-assert(grammarBank.bank.filter((word) => word === "very few").length === 2, "two very few chips");
+assert(grammarBank.items.length === 12, "grammar bank 12");
+assert(grammarBank.bank.filter((word) => word === "too").length === 4, "four too chips");
+assert(grammarBank.bank.filter((word) => word === "very few").length === 4, "four very few chips");
+assert(grammarBank.bank.filter((word) => word === "Although").length === 2, "two Although chips");
+assert(grammarBank.bank.filter((word) => word === "because").length === 2, "two because chips");
+const bankById = Object.fromEntries(grammarBank.items.map((item) => [item.id, item]));
+assert(bankById.g1.answer === "too" && bankById.g6.answer === "very few", "original bank kept");
+assert(bankById.g7.before === "The typhoon was" && bankById.g7.answer === "too" && bankById.g7.hint === "too + 形容詞。", "g7");
+assert(bankById.g8.after === "healthy snacks in the shop." && bankById.g8.answer === "very few", "g8");
+assert(bankById.g9.before === "" && bankById.g9.answer === "Although" && bankById.g9.after.startsWith("they sell flags"), "g9");
+assert(bankById.g10.before === "Amy had a sore throat" && bankById.g10.answer === "because", "g10");
+assert(bankById.g11.before === "That second-hand stall is" && bankById.g11.answer === "too", "g11");
+assert(bankById.g12.after === "aid workers in that village." && bankById.g12.answer === "very few", "g12");
 const grammarFix = findStep("grammar", "fix");
+assert(grammarFix.items.length === 6, "grammar fix 6");
 assert(grammarFix.items[0].answer === "The water is too dirty.", "too dirty fix");
 assert(grammarFix.items[1].answer === "There are very few doctors.", "very few doctors fix");
 assert(grammarFix.items[2].answer === order.items[0].answer, "although pattern fix");
+assert(grammarFix.items[3].id === "gf4" && grammarFix.items[3].prompt === "Fix: The river is very few dangerous.", "gf4 prompt");
+assert(grammarFix.items[3].answer === "The river is too dangerous.", "gf4 answer");
+assert(grammarFix.items[4].id === "gf5" && grammarFix.items[4].answer === "There are very few houses after the earthquake.", "gf5");
+assert(grammarFix.items[5].id === "gf6", "gf6 id");
+assert(grammarFix.items[5].prompt === "Fix: Although the water is dirty, people can't drink it.", "gf6 prompt");
+assert(grammarFix.items[5].answer === order.items[1].answer, "gf6 matches recite 2");
+assert(grammarFix.items[5].note && grammarFix.items[5].note.includes("背誦句 2"), "gf6 note");
 
 const dictation = content.modules.find((mod) => mod.id === "dictation");
 const typeSteps = dictation.steps.filter((step) => step.kind === "type");
@@ -293,6 +338,8 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
 const manifest = fs.readFileSync(path.join(root, "manifest.webmanifest"), "utf8");
 const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
 assert(game.includes("content.storageKey"), "game stores progress");
+assert(game.includes("step.hideIcons"), "icon hunt flag hides emoji");
+assert(game.includes('class="choice'), "mcq choices stay text buttons");
 assert(game.includes("function showModel"), "reveal gate");
 assert(game.includes("hiddenNote"), "hidden until submit or teacher");
 assert(game.includes("範例／教師用"), "teacher samples are labelled");
