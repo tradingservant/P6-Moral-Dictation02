@@ -464,7 +464,11 @@ function answerHold() {
 
   function iconHuntHtml(step) {
     const item = step.items[state.play.order[state.play.i]];
-    const buttons = step.pool.map((name) => `<button type="button" class="icon-pick" data-action="hunt" data-id="${esc(name)}">${emojiHtml(name)}<strong lang="en">${esc(name)}</strong></button>`).join("");
+    const buttons = step.pool.map((name) => {
+      const face = step.hideIcons ? "" : emojiHtml(name);
+      const textOnly = step.hideIcons ? " is-text" : "";
+      return `<button type="button" class="icon-pick${textOnly}" data-action="hunt" data-id="${esc(name)}">${face}<strong lang="en">${esc(name)}</strong></button>`;
+    }).join("");
     return `<section class="panel"><p class="kicker">${esc(step.title)} · ${state.play.i + 1}/${step.items.length}</p><p class="prompt-word" lang="zh-Hant">${esc(item.say)}</p><div class="icon-grid">${buttons}</div></section>`;
   }
 
